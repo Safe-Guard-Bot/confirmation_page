@@ -138,33 +138,27 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
 
     <script>
-        // Your Firebase config object
-        const firebaseConfig = {
-            apiKey: "AIzaSyCLjmC-4zknnSLS-sYrYkkgiA_4N245Od0",
-            authDomain: "safeguard-21423.firebaseapp.com",
-            projectId: "safeguard-21423",
-            storageBucket: "safeguard-21423.firebasestorage.app",
-            messagingSenderId: "220573737708",
-            appId: "1:220573737708:web:e8c6ecff659d8eec26fbc9",
-            measurementId: "G-HZ2FJEKJ5T"
-        };
-
-        // Initialize Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-
-        // Ensure that confirmationResult is available from the first page
-        const confirmationResult = window.confirmationResult;
-
         document.getElementById('verifyButton').onclick = function() {
             const otp = document.getElementById('otp').value;
-
-            confirmationResult.confirm(otp)
+    
+            if (!window.confirmationResult) {
+                alert("No OTP request found. Please go back and resend the OTP.");
+                return;
+            }
+    
+            window.confirmationResult.confirm(otp)
                 .then((result) => {
-                    const user = result.user;
                     alert('Phone number successfully verified!');
-                    // You can redirect or handle user information here
-                    window.location.href = "final.html"; // Redirect to a new page
+                    const user = result.user;
+    
+                    // Store verification in Firestore
+                    const db = firebase.firestore();
+                    db.collection("verified_users").doc(user.phoneNumber).set({
+                        verified: true,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+    
+                    window.location.href = "final.html"; // Redirect to success page
                 })
                 .catch((error) => {
                     console.error('Error verifying OTP: ', error);
