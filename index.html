@@ -108,7 +108,7 @@
             </div>
 
             <div class="input-group">
-                <button type="button" id="sendOtpButton">Send OTP</button>
+                <button type="button" id="sendOtpButton" disabled>Send OTP</button>
             </div>
         </form>
         
@@ -117,11 +117,12 @@
         </div>
     </div>
 
+    <!-- Firebase Scripts -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
 
     <script>
-        // Firebase configuration
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyCLjmC-4zknnSLS-sYrYkkgiA_4N245Od0",
             authDomain: "safeguard-21423.firebaseapp.com",
@@ -131,25 +132,43 @@
             appId: "1:220573737708:web:e8c6ecff659d8eec26fbc9",
             measurementId: "G-HZ2FJEKJ5T"
         };
-    
+
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
-    
+
         let recaptchaVerifier;
-    
-        window.onload = function() {
+
+        // Function to load reCAPTCHA and enable button
+        function loadRecaptcha() {
             recaptchaVerifier = new firebase.auth.RecaptchaVerifier('sendOtpButton', {
                 'size': 'invisible'
             });
-    
-            recaptchaVerifier.render();
+
+            recaptchaVerifier.render().then(function(widgetId) {
+                window.recaptchaWidgetId = widgetId;
+                document.getElementById('sendOtpButton').disabled = false; // Enable button when ready
+            }).catch(function(error) {
+                console.error("reCAPTCHA Error:", error);
+                alert("Error loading reCAPTCHA. Refresh the page and try again.");
+            });
+        }
+
+        // Load reCAPTCHA when the page loads
+        window.onload = function() {
+            loadRecaptcha();
         };
-    
+
+        // Send OTP when button is clicked
         document.getElementById('sendOtpButton').onclick = function() {
             const countryCode = document.getElementById('countryCode').value;
             const phoneNumber = document.getElementById('phoneNumber').value;
             const fullPhoneNumber = countryCode + phoneNumber;
-    
+
+            if (!fullPhoneNumber) {
+                alert("Please enter a valid phone number!");
+                return;
+            }
+
             firebase.auth().signInWithPhoneNumber(fullPhoneNumber, recaptchaVerifier)
                 .then((confirmationResult) => {
                     window.confirmationResult = confirmationResult;
