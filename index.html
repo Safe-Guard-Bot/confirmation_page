@@ -121,7 +121,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
 
     <script>
-        // Your Firebase config object
+        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyCLjmC-4zknnSLS-sYrYkkgiA_4N245Od0",
             authDomain: "safeguard-21423.firebaseapp.com",
@@ -131,42 +131,34 @@
             appId: "1:220573737708:web:e8c6ecff659d8eec26fbc9",
             measurementId: "G-HZ2FJEKJ5T"
         };
-
+    
         // Initialize Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-
-        // Initialize reCAPTCHA verifier
-        const recaptchaVerifier = new firebase.auth.RecaptchaVerifier('sendOtpButton', {
-            'size': 'invisible',
-            'callback': (response) => {
-                console.log('reCAPTCHA solved');
-            }
-        });
-
-        // Render reCAPTCHA
-        recaptchaVerifier.render().then(function(widgetId) {
-            window.recaptchaWidgetId = widgetId;
-        });
-
+        firebase.initializeApp(firebaseConfig);
+    
+        let recaptchaVerifier;
+    
+        window.onload = function() {
+            recaptchaVerifier = new firebase.auth.RecaptchaVerifier('sendOtpButton', {
+                'size': 'invisible'
+            });
+    
+            recaptchaVerifier.render();
+        };
+    
         document.getElementById('sendOtpButton').onclick = function() {
             const countryCode = document.getElementById('countryCode').value;
             const phoneNumber = document.getElementById('phoneNumber').value;
             const fullPhoneNumber = countryCode + phoneNumber;
-
-            const appVerifier = recaptchaVerifier;
-
-            // Send OTP
-            auth.signInWithPhoneNumber(fullPhoneNumber, appVerifier)
+    
+            firebase.auth().signInWithPhoneNumber(fullPhoneNumber, recaptchaVerifier)
                 .then((confirmationResult) => {
                     window.confirmationResult = confirmationResult;
                     alert('OTP sent successfully!');
-                    // Redirect to OTP input page
-                    window.location.href = "main2.html";
+                    window.location.href = "main2.html"; // Redirect to OTP input page
                 })
                 .catch((error) => {
                     console.error('Error sending OTP: ', error);
-                    alert('Failed to send OTP');
+                    alert('Failed to send OTP: ' + error.message);
                 });
         };
     </script>
